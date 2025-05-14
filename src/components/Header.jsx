@@ -8,7 +8,6 @@ function Header({ toggleSidebar }) {
                     <button
                         className={styles.menuButton}
                         onClick={toggleSidebar}
-                        aria-label="Toggle sidebar menu"
                     >
                         <div className={styles.hamburger}>
                             <span></span>
