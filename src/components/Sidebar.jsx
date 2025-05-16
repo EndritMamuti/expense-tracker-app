@@ -18,7 +18,7 @@ function Sidebar({ isOpen, closeSidebar }) {
                 <ul className={styles.navList}>
                     <li className={styles.navItem}>
                         <NavLink
-                            to="/Expenses"
+                            to="/"
                             className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
                             onClick={handleLinkClick}
                         >
