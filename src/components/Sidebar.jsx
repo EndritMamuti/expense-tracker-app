@@ -1,15 +1,16 @@
 import styles from '../styles/Sidebar.module.css';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext.jsx';
 
 function Sidebar({ isOpen, closeSidebar }) {
+    const { isAuthenticated } = useAuth();
+
     const sidebarClass = isOpen
         ? `${styles.sidebar} ${styles.open}`
         : styles.sidebar;
 
     const handleLinkClick = () => {
-        if (closeSidebar) {
-            closeSidebar();
-        }
+        closeSidebar();
     };
 
     return (
@@ -25,24 +26,30 @@ function Sidebar({ isOpen, closeSidebar }) {
                             <span className={styles.text}>Expenses</span>
                         </NavLink>
                     </li>
-                    <li className={styles.navItem}>
-                        <NavLink
-                            to="/CreateExpenses"
-                            className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
-                            onClick={handleLinkClick}
-                        >
-                            <span className={styles.text}>Create New Expense</span>
-                        </NavLink>
-                    </li>
-                    <li className={styles.navItem}>
-                        <NavLink
-                            to="/Login"
-                            className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
-                            onClick={handleLinkClick}
-                        >
-                            <span className={styles.text}>Login/Signup</span>
-                        </NavLink>
-                    </li>
+
+                    {isAuthenticated && (
+                        <li className={styles.navItem}>
+                            <NavLink
+                                to="/create-expense"
+                                className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
+                                onClick={handleLinkClick}
+                            >
+                                <span className={styles.text}>Create New Expense</span>
+                            </NavLink>
+                        </li>
+                    )}
+
+                    {!isAuthenticated && (
+                        <li className={styles.navItem}>
+                            <NavLink
+                                to="/login"
+                                className={({ isActive }) => isActive ? `${styles.navLink} ${styles.active}` : styles.navLink}
+                                onClick={handleLinkClick}
+                            >
+                                <span className={styles.text}>Login/Signup</span>
+                            </NavLink>
+                        </li>
+                    )}
                 </ul>
             </nav>
         </div>

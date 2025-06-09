@@ -1,3 +1,424 @@
-.content{
+.content {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 3rem 2rem 2rem 2rem;
+    min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.formHeader {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.formHeader .backButton {
+    align-self: flex-start;
+    margin-bottom: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(102, 126, 234, 0.1);
+    color: #4a5568;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+}
+
+.formHeader .backButton:hover {
+    background: rgba(102, 126, 234, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+    color: #2d3748;
+}
+
+.title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 0;
+    letter-spacing: -0.025em;
     text-align: center;
+}
+
+.loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    padding: 4rem;
+}
+
+.loadingContent {
+    text-align: center;
+    max-width: 400px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.loadingContent h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #2d3748;
+    margin: 2rem 0 0.5rem 0;
+}
+
+.loadingContent p {
+    font-size: 1rem;
+    color: #4a5568;
+    margin: 0;
+}
+
+.largeSpinner {
+    width: 3rem;
+    height: 3rem;
+    border: 3px solid rgba(102, 126, 234, 0.2);
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+.formContainer {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.successMessage,
+.errorMessage,
+.warningMessage {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    font-weight: 500;
+    border: 1px solid;
+}
+
+.successMessage {
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+    border-color: #68d391;
+}
+
+.errorMessage {
+    background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+    border-color: #fc8181;
+}
+
+.warningMessage {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #f6cc3e;
+}
+
+.successMessage h4,
+.errorMessage h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin: 0 0 0.25rem 0;
+}
+
+.successMessage h4 {
+    color: #2f855a;
+}
+
+.errorMessage h4 {
+    color: #c53030;
+}
+
+.successMessage p,
+.errorMessage p,
+.warningMessage p {
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.successMessage p {
+    color: #2f855a;
+}
+
+.errorMessage p {
+    color: #c53030;
+}
+
+.warningMessage p {
+    color: #92400e;
+}
+
+.backButton {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    background: rgba(255, 255, 255, 0.9);
+    color: #4a5568;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    backdrop-filter: blur(10px);
+}
+
+.backButton:hover {
+    background: rgba(255, 255, 255, 1);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    color: #2d3748;
+}
+
+
+.form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #2d3748;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+.input,
+.select {
+    padding: 0.875rem 1rem;
+    border: 2px solid #e2e8f0;
+    background-color: #ffffff;
+    color: #2d3748;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.2s ease;
+    outline: none;
+}
+
+.input:focus,
+.select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    transform: translateY(-1px);
+}
+
+.input:disabled,
+.select:disabled {
+    background-color: #f7fafc;
+    color: #a0aec0;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.input::placeholder {
+    color: #a0aec0;
+}
+
+.fieldHint {
+    font-size: 0.75rem;
+    color: #4a5568;
+    font-style: italic;
+    margin-top: 0.25rem;
+}
+
+.loadingCategories {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.875rem 1rem;
+    background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    color: #4a5568;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.spinner {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid rgba(102, 126, 234, 0.2);
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+
+.submitButton {
+    width: 100%;
+    padding: 1rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 3.5rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #ffffff;
+    border: 2px solid transparent;
+    outline: none;
+}
+
+.submitButton:hover:not(.disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+}
+
+.submitButton:active {
+    transform: translateY(0);
+}
+
+.submitButton.disabled {
+    background-color: #a0aec0;
+    cursor: not-allowed;
+    opacity: 0.6;
+    transform: none;
+    box-shadow: none;
+}
+
+
+.formStatus {
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.statusText {
+    font-size: 0.875rem;
+    color: #c53030;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #fed7d7 0%, #feb2b2 100%);
+    border-radius: 8px;
+    border: 1px solid #fc8181;
+    font-weight: 500;
+}
+
+.statusTextReady {
+    font-size: 0.875rem;
+    color: #2f855a;
+    margin: 0;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #c6f6d5 0%, #9ae6b4 100%);
+    border-radius: 8px;
+    border: 1px solid #68d391;
+    font-weight: 500;
+}
+
+
+.input:valid:not(:focus):not(:placeholder-shown) {
+    border-color: #38a169;
+    box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.1);
+}
+
+
+@media (max-width: 768px) {
+    .content {
+        padding: 2rem 1rem 1rem 1rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .formContainer {
+        padding: 2rem;
+    }
+
+    .form {
+        gap: 1.25rem;
+    }
+
+    .submitButton {
+        font-size: 1rem;
+        min-height: 3rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .content {
+        padding: 1rem 0.5rem 0.5rem 0.5rem;
+    }
+
+    .title {
+        font-size: 1.5rem;
+    }
+
+    .formContainer {
+        padding: 1.5rem;
+    }
+
+    .input,
+    .select {
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .successMessage,
+    .errorMessage,
+    .warningMessage {
+        padding: 1rem;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .backButton,
+    .formHeader .backButton {
+        width: 100%;
+        justify-content: center;
+        align-self: center;
+    }
+
+    .submitButton {
+        font-size: 0.9rem;
+        min-height: 2.75rem;
+    }
+}
+
+
+.input:focus,
+.select:focus,
+.submitButton:focus,
+.backButton:focus,
+.formHeader .backButton:focus {
+    outline: 2px solid #667eea;
+    outline-offset: 2px;
+}
+
+.form:has(.submitButton.disabled) {
+    opacity: 0.8;
 }
