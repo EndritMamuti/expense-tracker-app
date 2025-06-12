@@ -15,7 +15,6 @@ export const AuthProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
 
-    // Check authentication status on app load
     useEffect(() => {
         const checkAuthStatus = async () => {
             try {
