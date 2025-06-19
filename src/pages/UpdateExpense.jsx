@@ -3,22 +3,11 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import styles from '../styles/UpdateExpense.module.css';
 
-const mockCategories = [
-    { id: 1, name: 'Food' },
-    { id: 2, name: 'Housing' },
-    { id: 3, name: 'Transportation' },
-    { id: 4, name: 'Entertainment' },
-    { id: 5, name: 'Utilities' },
-    { id: 6, name: 'Healthcare' },
-    { id: 7, name: 'Shopping' },
-    { id: 8, name: 'Travel' }
-];
-
-const sampleExpenses = [
-    { id: 1, title: "Groceries", category: "Food", categoryId: 1, amount: 78.45, date: "2025-05-12" },
-    { id: 2, title: "Rent", category: "Housing", categoryId: 2, amount: 600.00, date: "2025-05-01" },
-    { id: 3, title: "Dinner Out", category: "Entertainment", categoryId: 4, amount: 56.20, date: "2025-05-14" },
-    { id: 4, title: "Electric Bill", category: "Utilities", categoryId: 5, amount: 94.73, date: "2025-05-10" }
+const categories = [
+    { id: 1, name: 'Technology' },
+    { id: 2, name: 'Science' },
+    { id: 3, name: 'Health' },
+    { id: 4, name: 'Sports' },
 ];
 
 function UpdateExpense() {
@@ -28,263 +17,102 @@ function UpdateExpense() {
 
     const expenseId = searchParams.get('id');
 
-    const [formData, setFormData] = useState({
-        title: '',
-        amount: '',
-        categoryId: '',
-        date: ''
-    });
+    const [title, setTitle] = useState('');
+    const [amount, setAmount] = useState('');
+    const [categoryId, setCategoryId] = useState('');
 
-    const [categories, setCategories] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState('');
     const [originalExpense, setOriginalExpense] = useState(null);
-
-    const [pageLoading, setPageLoading] = useState(true);
-    const [categoriesLoading, setCategoriesLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
-
-    const [pageError, setPageError] = useState('');
-    const [categoriesError, setCategoriesError] = useState('');
-    const [submitError, setSubmitError] = useState('');
-    const [submitSuccess, setSubmitSuccess] = useState(false);
 
     useEffect(() => {
         if (!isAuthenticated) {
             navigate('/login');
             return;
         }
-
         if (!expenseId) {
-            navigate('/', { replace: true });
+            navigate('/');
             return;
         }
+        loadExpense();
     }, [isAuthenticated, expenseId, navigate]);
 
-    useEffect(() => {
-        const fetchExpenseDetails = async () => {
-            if (!expenseId || !isAuthenticated) return;
+    const loadExpense = async () => {
+        try {
+            setLoading(true);
+            const response = await fetch(`http://localhost:8080/api/expense/${expenseId}`, {
+                credentials: 'include'
+            });
 
-            try {
-                setPageLoading(true);
-                setPageError('');
-
-                console.log(`Loading expense details for ID: ${expenseId}`);
-
-                try {
-                    const token = localStorage.getItem('authToken');
-                    const response = await fetch(`http://localhost:8080/api/expenses/${expenseId}`, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...(token && { 'Authorization': `Bearer ${token}` })
-                        }
-                    });
-
-                    if (response.ok) {
-                        const expenseData = await response.json();
-                        console.log('Expense loaded from API:', expenseData);
-
-                        setOriginalExpense(expenseData);
-                        setFormData({
-                            title: expenseData.title || '',
-                            amount: expenseData.amount?.toString() || '',
-                            categoryId: expenseData.categoryId?.toString() || '',
-                            date: expenseData.date || ''
-                        });
-                        return;
-                    } else {
-                        throw new Error(`API request failed with status: ${response.status}`);
-                    }
-                } catch (apiError) {
-                    console.log('API unavailable, checking local storage:', apiError.message);
-
-                    const localExpenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-                    const localExpense = localExpenses.find(exp => exp.id.toString() === expenseId.toString());
-
-                    if (localExpense) {
-                        console.log('Found expense in local storage:', localExpense);
-                        setOriginalExpense(localExpense);
-                        setFormData({
-                            title: localExpense.title || '',
-                            amount: localExpense.amount?.toString() || '',
-                            categoryId: localExpense.categoryId?.toString() || '',
-                            date: localExpense.date || ''
-                        });
-                        return;
-                    }
-
-                    const sampleExpense = sampleExpenses.find(exp => exp.id.toString() === expenseId.toString());
-                    if (sampleExpense) {
-                        console.log('Using sample expense data:', sampleExpense);
-                        setOriginalExpense(sampleExpense);
-                        setFormData({
-                            title: sampleExpense.title || '',
-                            amount: sampleExpense.amount?.toString() || '',
-                            categoryId: sampleExpense.categoryId?.toString() || '',
-                            date: sampleExpense.date || ''
-                        });
-                        return;
-                    }
-
-                    throw new Error('Expense not found');
-                }
-            } catch (error) {
-                console.error('Failed to load expense details:', error);
-                setPageError(`Could not load expense details: ${error.message}`);
-            } finally {
-                setPageLoading(false);
+            if (response.ok) {
+                const expense = await response.json();
+                setOriginalExpense(expense);
+                setTitle(expense.title || '');
+                setAmount(expense.value?.toString() || '');
+                setCategoryId(expense.categoryId?.toString() || '');
+                setError('');
+            } else {
+                setError('Backend not available - using demo data');
+                const demoExpense = { id: expenseId, title: 'Demo Expense', value: 50, categoryId: 1 };
+                setOriginalExpense(demoExpense);
+                setTitle(demoExpense.title);
+                setAmount(demoExpense.value.toString());
+                setCategoryId(demoExpense.categoryId.toString());
             }
-        };
-
-        fetchExpenseDetails();
-    }, [expenseId, isAuthenticated]);
-
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                setCategoriesLoading(true);
-                setCategoriesError('');
-
-                console.log('Loading categories...');
-
-                try {
-                    const token = localStorage.getItem('authToken');
-                    const response = await fetch('http://localhost:8080/api/categories', {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...(token && { 'Authorization': `Bearer ${token}` })
-                        }
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        console.log('Categories loaded from API:', data);
-                        setCategories(data);
-                        return;
-                    } else {
-                        throw new Error('API not available');
-                    }
-                } catch (apiError) {
-                    console.log('API unavailable, using default categories:', apiError.message);
-                    setCategories(mockCategories);
-                }
-            } catch (error) {
-                console.error('Error loading categories:', error);
-                setCategoriesError('Could not load categories. Using default options.');
-                setCategories(mockCategories);
-            } finally {
-                setCategoriesLoading(false);
-            }
-        };
-
-        if (isAuthenticated) {
-            fetchCategories();
+        } catch (err) {
+            setError('Backend server not running');
+        } finally {
+            setLoading(false);
         }
-    }, [isAuthenticated]);
-
-    const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
-
-        if (submitError) {
-            setSubmitError('');
-        }
-    };
-
-    const validateForm = () => {
-        const errors = [];
-
-        if (!formData.title.trim()) {
-            errors.push('Title is required');
-        }
-
-        if (!formData.amount || isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
-            errors.push('Valid amount is required');
-        }
-
-        if (!formData.categoryId) {
-            errors.push('Category is required');
-        }
-
-        return errors;
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const validationErrors = validateForm();
-        if (validationErrors.length > 0) {
-            setSubmitError(`Please fix these errors:\n${validationErrors.join('\n')}`);
+        if (!title.trim() || !amount || !categoryId) {
+            setError('Please fill in all required fields');
             return;
         }
 
-        setSubmitting(true);
-        setSubmitError('');
-        setSubmitSuccess(false);
+        const numAmount = parseFloat(amount);
+        if (isNaN(numAmount) || numAmount <= 0) {
+            setError('Please enter a valid amount');
+            return;
+        }
+
+        setSaving(true);
+        setError('');
 
         try {
-            const updatedExpense = {
-                id: parseInt(expenseId),
-                title: formData.title.trim(),
-                amount: parseFloat(formData.amount),
-                categoryId: parseInt(formData.categoryId),
-                date: formData.date || new Date().toISOString().split('T')[0]
-            };
+            const response = await fetch(`http://localhost:8080/api/expenses/${expenseId}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    title: title.trim(),
+                    value: numAmount,
+                    categoryId: parseInt(categoryId)
+                })
+            });
 
-            console.log('Updating expense:', updatedExpense);
-
-            try {
-                const token = localStorage.getItem('authToken');
-                const response = await fetch(`http://localhost:8080/api/expenses/${expenseId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...(token && { 'Authorization': `Bearer ${token}` })
-                    },
-                    body: JSON.stringify(updatedExpense)
-                });
-
-                if (response.ok) {
-                    const responseData = await response.json();
-                    console.log('Expense updated via API:', responseData);
-                } else {
-                    const errorData = await response.text();
-                    throw new Error(`API update failed: ${response.status} - ${errorData}`);
-                }
-            } catch (apiError) {
-                console.log('API update failed, updating local storage:', apiError.message);
-
-                const localExpenses = JSON.parse(localStorage.getItem('expenses') || '[]');
-                const updatedLocalExpenses = localExpenses.map(exp =>
-                    exp.id.toString() === expenseId.toString()
-                        ? { ...updatedExpense, category: categories.find(cat => cat.id === updatedExpense.categoryId)?.name || 'Unknown' }
-                        : exp
-                );
-                localStorage.setItem('expenses', JSON.stringify(updatedLocalExpenses));
-                console.log('Updated expense in local storage');
+            if (response.ok) {
+                alert('Expense updated!');
+                navigate('/');
+            } else {
+                setError('Backend not available - changes not saved');
             }
-
-            setSubmitSuccess(true);
-            alert(`Expense "${updatedExpense.title}" has been updated successfully!`);
-
-            setTimeout(() => {
-                navigate('/', { replace: true });
-            }, 1500);
-
-        } catch (error) {
-            console.error('Error updating expense:', error);
-            setSubmitError(`Failed to update expense: ${error.message}`);
+        } catch (err) {
+            setError('Backend server not running - check console');
+            console.log('Backend error:', err.message);
         } finally {
-            setSubmitting(false);
+            setSaving(false);
         }
     };
 
     const handleCancel = () => {
-        if (window.confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
-            navigate('/', { replace: true });
+        if (confirm('Cancel changes?')) {
+            navigate('/');
         }
     };
 
@@ -296,8 +124,7 @@ function UpdateExpense() {
         return (
             <div className={styles.container}>
                 <div className={styles.errorPage}>
-                    <h2>Invalid Request</h2>
-                    <p>No expense ID provided. Please select an expense to edit.</p>
+                    <h2>No expense selected</h2>
                     <button onClick={() => navigate('/')} className={styles.backButton}>
                         Back to Expenses
                     </button>
@@ -306,29 +133,28 @@ function UpdateExpense() {
         );
     }
 
-    if (pageLoading) {
+    if (loading) {
         return (
             <div className={styles.container}>
                 <div className={styles.loadingContainer}>
                     <div className={styles.loadingContent}>
                         <div className={styles.largeSpinner}></div>
-                        <h3>Loading Expense Details</h3>
-                        <p>Please wait while we load the expense information...</p>
+                        <h3>Loading expense...</h3>
                     </div>
                 </div>
             </div>
         );
     }
 
-    if (pageError) {
+    if (error && !originalExpense) {
         return (
             <div className={styles.container}>
                 <div className={styles.errorPage}>
-                    <h2>Error Loading Expense</h2>
-                    <p>{pageError}</p>
+                    <h2>Error</h2>
+                    <p>{error}</p>
                     <div className={styles.errorActions}>
-                        <button onClick={() => window.location.reload()} className={styles.retryButton}>
-                            Retry
+                        <button onClick={loadExpense} className={styles.retryButton}>
+                            Try Again
                         </button>
                         <button onClick={() => navigate('/')} className={styles.backButton}>
                             Back to Expenses
@@ -339,30 +165,17 @@ function UpdateExpense() {
         );
     }
 
+    const isValid = title.trim() && amount && categoryId;
+
     return (
         <div className={styles.container}>
             <div className={styles.formContainer}>
-                {submitSuccess && (
-                    <div className={styles.successMessage}>
-                        <div>
-                            <h4>Success!</h4>
-                            <p>Expense updated successfully. Redirecting to home page...</p>
-                        </div>
-                    </div>
-                )}
-
-                {submitError && (
+                {error && (
                     <div className={styles.errorMessage}>
                         <div>
-                            <h4>Update Failed</h4>
-                            <p>{submitError}</p>
+                            <h4>Error</h4>
+                            <p>{error}</p>
                         </div>
-                    </div>
-                )}
-
-                {categoriesError && (
-                    <div className={styles.warningMessage}>
-                        <p>{categoriesError}</p>
                     </div>
                 )}
 
@@ -371,13 +184,13 @@ function UpdateExpense() {
                         <button onClick={handleCancel} className={styles.backButton} type="button">
                             Back to Expenses
                         </button>
-                        <h2>Expense Details</h2>
+                        <h2>Edit Expense</h2>
                         {originalExpense && (
                             <p className={styles.originalInfo}>
                                 Currently: "{originalExpense.title}" - {new Intl.NumberFormat('en-US', {
                                 style: 'currency',
                                 currency: 'USD'
-                            }).format(originalExpense.amount)}
+                            }).format(originalExpense.value)}
                             </p>
                         )}
                     </div>
@@ -388,14 +201,12 @@ function UpdateExpense() {
                         </label>
                         <input
                             id="title"
-                            name="title"
                             type="text"
-                            required
-                            value={formData.title}
-                            onChange={handleInputChange}
-                            className={styles.input}
+                            value={title}
+                            onChange={(e) => setTitle(e.target.value)}
                             placeholder="Enter expense title"
-                            disabled={submitting}
+                            disabled={saving}
+                            required
                         />
                     </div>
 
@@ -405,16 +216,14 @@ function UpdateExpense() {
                         </label>
                         <input
                             id="amount"
-                            name="amount"
                             type="number"
                             step="0.01"
                             min="0"
-                            required
-                            value={formData.amount}
-                            onChange={handleInputChange}
-                            className={styles.input}
+                            value={amount}
+                            onChange={(e) => setAmount(e.target.value)}
                             placeholder="0.00"
-                            disabled={submitting}
+                            disabled={saving}
+                            required
                         />
                     </div>
 
@@ -422,68 +231,42 @@ function UpdateExpense() {
                         <label htmlFor="categoryId" className={styles.label}>
                             Category
                         </label>
-                        {categoriesLoading ? (
-                            <div className={styles.loadingCategories}>
-                                <div className={styles.spinner}></div>
-                                Loading categories...
-                            </div>
-                        ) : (
-                            <select
-                                id="categoryId"
-                                name="categoryId"
-                                required
-                                value={formData.categoryId}
-                                onChange={handleInputChange}
-                                className={styles.select}
-                                disabled={submitting}
-                            >
-                                <option value="">Select a category</option>
-                                {categories.map((category) => (
-                                    <option key={category.id} value={category.id}>
-                                        {category.name}
-                                    </option>
-                                ))}
-                            </select>
-                        )}
+                        <select
+                            id="categoryId"
+                            value={categoryId}
+                            onChange={(e) => setCategoryId(e.target.value)}
+                            disabled={saving}
+                            required
+                        >
+                            <option value="">Select a category</option>
+                            {categories.map((category) => (
+                                <option key={category.id} value={category.id}>
+                                    {category.name}
+                                </option>
+                            ))}
+                        </select>
                     </div>
 
-                    <div className={styles.formGroup}>
-                        <label htmlFor="date" className={styles.label}>
-                            Date
-                        </label>
-                        <input
-                            id="date"
-                            name="date"
-                            type="date"
-                            value={formData.date}
-                            onChange={handleInputChange}
-                            className={styles.input}
-                            disabled={submitting}
-                        />
-                    </div>
+
 
                     <div className={styles.formActions}>
                         <button
                             type="button"
                             onClick={handleCancel}
                             className={styles.cancelButton}
-                            disabled={submitting}
+                            disabled={saving}
                         >
                             Cancel
                         </button>
                         <button
                             type="submit"
-                            disabled={submitting || categoriesLoading || !formData.title.trim() || !formData.amount || !formData.categoryId}
-                            className={`${styles.submitButton} ${
-                                (submitting || categoriesLoading || !formData.title.trim() || !formData.amount || !formData.categoryId)
-                                    ? styles.disabled
-                                    : ''
-                            }`}
+                            disabled={!isValid || saving}
+                            className={`${styles.submitButton} ${!isValid || saving ? styles.disabled : ''}`}
                         >
-                            {submitting ? (
+                            {saving ? (
                                 <>
                                     <div className={styles.spinner}></div>
-                                    Updating Expense...
+                                    Updating...
                                 </>
                             ) : (
                                 'Update Expense'
