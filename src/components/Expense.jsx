@@ -22,14 +22,7 @@ const ExpenseCard = ({ expense, onDelete, isAuthenticated }) => {
         }).format(amount || 0);
     };
 
-    const formatDate = (date) => {
-        if (!date) return 'No date';
-        return new Date(date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    };
+
 
     const getCategoryName = () => {
         if (expense.category) {
@@ -88,9 +81,7 @@ const ExpenseCard = ({ expense, onDelete, isAuthenticated }) => {
                     {formatMoney(amount)}
                 </div>
             </div>
-            <div className={styles.expenseDate}>
-                {formatDate(expense.date)}
-            </div>
+
 
             {isAuthenticated && (
                 <div className={styles.buttonContainer}>
