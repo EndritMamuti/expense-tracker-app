@@ -3,15 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import styles from '../styles/Expense.module.css';
 
-const categories = [
-    { id: 1, name: 'Technology' },
-    { id: 2, name: 'Science' },
-    { id: 3, name: 'Health' },
-    { id: 4, name: 'Sports' },
-];
-
-
-const ExpenseCard = ({ expense, onDelete, isAuthenticated }) => {
+const ExpenseCard = ({ expense, onDelete, isAuthenticated, categories }) => {
     const [deleting, setDeleting] = useState(false);
     const navigate = useNavigate();
 
@@ -21,8 +13,6 @@ const ExpenseCard = ({ expense, onDelete, isAuthenticated }) => {
             currency: 'USD'
         }).format(amount || 0);
     };
-
-
 
     const getCategoryName = () => {
         if (expense.category) {
@@ -34,7 +24,7 @@ const ExpenseCard = ({ expense, onDelete, isAuthenticated }) => {
             }
         }
 
-        if (expense.categoryId) {
+        if (expense.categoryId && categories.length > 0) {
             const cat = categories.find(c => c.id === expense.categoryId);
             if (cat) return cat.name;
         }
@@ -82,7 +72,6 @@ const ExpenseCard = ({ expense, onDelete, isAuthenticated }) => {
                 </div>
             </div>
 
-
             {isAuthenticated && (
                 <div className={styles.buttonContainer}>
                     <button
@@ -116,8 +105,35 @@ const ExpensesHomePage = () => {
     const navigate = useNavigate();
 
     const [expenses, setExpenses] = useState([]);
+    const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [error, setError] = useState('');
+
+
+
+
+    const loadCategories = async () => {
+        try {
+            setCategoriesLoading(true);
+            const response = await fetch('http://localhost:8080/api/categories', {
+                credentials: 'include'
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                setCategories(data || []);
+            } else {
+                console.log('Categories API not available, using sample data');
+                setCategories(sampleCategories);
+            }
+        } catch (err) {
+            console.log('Categories network error, using sample data');
+            setCategories(sampleCategories);
+        } finally {
+            setCategoriesLoading(false);
+        }
+    };
 
     const loadExpenses = async () => {
         try {
@@ -132,12 +148,12 @@ const ExpensesHomePage = () => {
                 setError('');
             } else {
                 console.log('API not available, using sample data');
-                setExpenses(sampleExpenses);
+                setExpenses([]);
                 setError('Using sample data (API not connected)');
             }
         } catch (err) {
             console.log('Network error, using sample data');
-            setExpenses(sampleExpenses);
+            setExpenses([]);
             setError('Using sample data (Backend not running)');
         } finally {
             setLoading(false);
@@ -145,6 +161,7 @@ const ExpensesHomePage = () => {
     };
 
     useEffect(() => {
+        loadCategories();
         loadExpenses();
     }, []);
 
@@ -171,12 +188,12 @@ const ExpensesHomePage = () => {
         return sum + (isNaN(amount) ? 0 : amount);
     }, 0);
 
-    if (loading) {
+    if (loading || categoriesLoading) {
         return (
             <div className={styles.container}>
                 <div className={styles.loadingContainer}>
                     <div className={styles.spinner}></div>
-                    <h3>Loading expenses...</h3>
+                    <h3>Loading expenses and categories...</h3>
                 </div>
             </div>
         );
@@ -192,7 +209,10 @@ const ExpensesHomePage = () => {
                     </p>
                 </div>
                 <div className={styles.headerActions}>
-                    <button onClick={loadExpenses} className={styles.refreshButton}>
+                    <button onClick={() => {
+                        loadExpenses();
+                        loadCategories();
+                    }} className={styles.refreshButton}>
                         Refresh
                     </button>
                     {isAuthenticated && (
@@ -231,13 +251,22 @@ const ExpensesHomePage = () => {
                         <p className={styles.summaryLabel}>Total Amount</p>
                     </div>
                 </div>
+                <div className={styles.summaryCard}>
+                    <div className={styles.summaryContent}>
+                        <h3 className={styles.summaryValue}>{categories.length}</h3>
+                        <p className={styles.summaryLabel}>Categories</p>
+                    </div>
+                </div>
             </div>
 
             {error && (
                 <div className={styles.errorContainer}>
                     <h4>Notice</h4>
                     <p>{error}</p>
-                    <button onClick={loadExpenses} className={styles.retryButton}>
+                    <button onClick={() => {
+                        loadExpenses();
+                        loadCategories();
+                    }} className={styles.retryButton}>
                         Try Again
                     </button>
                 </div>
@@ -274,6 +303,7 @@ const ExpensesHomePage = () => {
                                 expense={expense}
                                 onDelete={deleteExpense}
                                 isAuthenticated={isAuthenticated}
+                                categories={categories}
                             />
                         ))}
                     </div>
