@@ -8,7 +8,6 @@ const categories = [
     { id: 2, name: 'Science' },
     { id: 3, name: 'Health' },
     { id: 4, name: 'Sports' },
-
 ];
 
 function CreateExpense() {
@@ -129,6 +128,7 @@ function CreateExpense() {
                             placeholder="Enter expense name"
                             disabled={loading}
                             required
+                            className={styles.input}
                         />
                     </div>
 
@@ -146,6 +146,7 @@ function CreateExpense() {
                             placeholder="0.00"
                             disabled={loading}
                             required
+                            className={styles.input}
                         />
                     </div>
 
@@ -159,6 +160,7 @@ function CreateExpense() {
                             onChange={(e) => setCategoryId(e.target.value)}
                             disabled={loading}
                             required
+                            className={styles.select}
                         >
                             <option value="">Select a category</option>
                             {categories.map((category) => (

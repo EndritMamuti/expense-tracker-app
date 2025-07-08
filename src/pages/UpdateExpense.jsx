@@ -207,6 +207,7 @@ function UpdateExpense() {
                             placeholder="Enter expense title"
                             disabled={saving}
                             required
+                            className={styles.input}
                         />
                     </div>
 
@@ -224,6 +225,7 @@ function UpdateExpense() {
                             placeholder="0.00"
                             disabled={saving}
                             required
+                            className={styles.input}
                         />
                     </div>
 
@@ -237,6 +239,7 @@ function UpdateExpense() {
                             onChange={(e) => setCategoryId(e.target.value)}
                             disabled={saving}
                             required
+                            className={styles.select}
                         >
                             <option value="">Select a category</option>
                             {categories.map((category) => (
@@ -246,8 +249,6 @@ function UpdateExpense() {
                             ))}
                         </select>
                     </div>
-
-
 
                     <div className={styles.formActions}>
                         <button
