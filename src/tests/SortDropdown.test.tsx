@@ -1,4 +1,5 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import SortDropdown, { SortOption } from '../components/SortDropdown';
 
 describe('SortDropdown Component', () => {
@@ -9,17 +10,9 @@ describe('SortDropdown Component', () => {
     });
 
     it('renders dropdown with all sort options', () => {
-        render(
-            <SortDropdown
-                sortOption="none"
-                onSortChange={mockOnSortChange}
-            />
-        );
+        render(<SortDropdown sortOption="none" onSortChange={mockOnSortChange} />);
 
-        const dropdown = screen.getByTestId('sort-dropdown');
-        expect(dropdown).toBeInTheDocument();
-
-        // Check all options exist
+        expect(screen.getByRole('combobox')).toBeInTheDocument();
         expect(screen.getByText('Sort: None')).toBeInTheDocument();
         expect(screen.getByText('Highest Amount')).toBeInTheDocument();
         expect(screen.getByText('Lowest Amount')).toBeInTheDocument();
@@ -28,84 +21,37 @@ describe('SortDropdown Component', () => {
     });
 
     it('displays the current selected sort option', () => {
-        render(
-            <SortDropdown
-                sortOption="highest"
-                onSortChange={mockOnSortChange}
-            />
-        );
-
-        const dropdown = screen.getByTestId('sort-dropdown');
-        expect(dropdown).toHaveValue('highest');
+        render(<SortDropdown sortOption="highest" onSortChange={mockOnSortChange} />);
+        expect(screen.getByRole('combobox')).toHaveValue('highest');
     });
 
-    it('calls onSortChange when user selects a different option', () => {
-        render(
-            <SortDropdown
-                sortOption="none"
-                onSortChange={mockOnSortChange}
-            />
-        );
-
-        const dropdown = screen.getByTestId('sort-dropdown');
-        fireEvent.change(dropdown, { target: { value: 'lowest' } });
-
-        expect(mockOnSortChange).toHaveBeenCalledTimes(1);
+    it('calls onSortChange when user selects a different option', async () => {
+        render(<SortDropdown sortOption="none" onSortChange={mockOnSortChange} />);
+        await userEvent.selectOptions(screen.getByRole('combobox'), 'lowest');
         expect(mockOnSortChange).toHaveBeenCalledWith('lowest');
     });
 
-    it('calls onSortChange with correct type for each option', () => {
+    it('calls onSortChange with correct type for each option', async () => {
         const sortOptions: SortOption[] = ['none', 'highest', 'lowest', 'latest', 'oldest'];
 
-        sortOptions.forEach((option) => {
-            mockOnSortChange.mockClear();
-
-            const { unmount } = render(
-                <SortDropdown
-                    sortOption="none"
-                    onSortChange={mockOnSortChange}
-                />
-            );
-
-            const dropdown = screen.getByTestId('sort-dropdown');
-            fireEvent.change(dropdown, { target: { value: option } });
-
+        for (const option of sortOptions) {
+            const { unmount } = render(<SortDropdown sortOption="none" onSortChange={mockOnSortChange} />);
+            await userEvent.selectOptions(screen.getByRole('combobox'), option);
             expect(mockOnSortChange).toHaveBeenCalledWith(option);
             unmount();
-        });
+        }
     });
 
     it('has correct default option selected', () => {
-        render(
-            <SortDropdown
-                sortOption="none"
-                onSortChange={mockOnSortChange}
-            />
-        );
-
-        const dropdown = screen.getByTestId('sort-dropdown');
-        expect(dropdown).toHaveValue('none');
+        render(<SortDropdown sortOption="none" onSortChange={mockOnSortChange} />);
+        expect(screen.getByRole('combobox')).toHaveValue('none');
     });
 
     it('updates selection when sortOption prop changes', () => {
-        const { rerender } = render(
-            <SortDropdown
-                sortOption="none"
-                onSortChange={mockOnSortChange}
-            />
-        );
+        const { rerender } = render(<SortDropdown sortOption="none" onSortChange={mockOnSortChange} />);
+        expect(screen.getByRole('combobox')).toHaveValue('none');
 
-        let dropdown = screen.getByTestId('sort-dropdown');
-        expect(dropdown).toHaveValue('none');
-
-        rerender(
-            <SortDropdown
-                sortOption="highest"
-                onSortChange={mockOnSortChange}
-            />
-        );
-
-        dropdown = screen.getByTestId('sort-dropdown');
-        expect(dropdown).toHaveValue('highest');
+        rerender(<SortDropdown sortOption="highest" onSortChange={mockOnSortChange} />);
+        expect(screen.getByRole('combobox')).toHaveValue('highest');
     });
 });

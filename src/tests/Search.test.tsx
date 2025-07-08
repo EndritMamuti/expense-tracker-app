@@ -1,78 +1,71 @@
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import Search from '../components/Search';
 
-describe('Search Component', () => {
-    const mockOnSearchChange = vi.fn();
+const ControlledSearch = ({
+                              initialValue = '',
+                              onSearchChange,
+                          }: {
+    initialValue?: string;
+    onSearchChange: (val: string) => void;
+}) => {
+    const [value, setValue] = useState(initialValue);
 
-    beforeEach(() => {
-        mockOnSearchChange.mockClear();
-    });
+    return (
+        <Search
+            searchTerm={value}
+            onSearchChange={(val) => {
+                setValue(val);
+                onSearchChange(val);
+            }}
+        />
+    );
+};
+
+describe('Search Component', () => {
+    const renderControlled = (initialValue = '') => {
+        const mockHandler = vi.fn();
+        render(<ControlledSearch initialValue={initialValue} onSearchChange={mockHandler} />);
+        return mockHandler;
+    };
 
     it('renders search input with correct placeholder', () => {
-        render(
-            <Search
-                searchTerm=""
-                onSearchChange={mockOnSearchChange}
-            />
-        );
-
-        const searchInput = screen.getByTestId('search-input');
-        expect(searchInput).toBeInTheDocument();
-        expect(searchInput).toHaveAttribute('placeholder', 'Search expenses by title...');
+        renderControlled();
+        expect(screen.getByPlaceholderText('Search expenses by title...')).toBeInTheDocument();
     });
 
     it('displays the current search term value', () => {
-        const searchTerm = 'coffee';
-        render(
-            <Search
-                searchTerm={searchTerm}
-                onSearchChange={mockOnSearchChange}
-            />
-        );
-
-        const searchInput = screen.getByTestId('search-input');
-        expect(searchInput).toHaveValue(searchTerm);
+        renderControlled('coffee');
+        expect(screen.getByRole('textbox')).toHaveValue('coffee');
     });
 
-    it('calls onSearchChange when user types in the input', () => {
-        render(
-            <Search
-                searchTerm=""
-                onSearchChange={mockOnSearchChange}
-            />
-        );
+    it('calls onSearchChange when user types in the input', async () => {
+        const handler = renderControlled('');
+        const input = screen.getByRole('textbox');
 
-        const searchInput = screen.getByTestId('search-input');
-        fireEvent.change(searchInput, { target: { value: 'grocery' } });
+        await act(async () => {
+            await userEvent.type(input, 'grocery');
+        });
 
-        expect(mockOnSearchChange).toHaveBeenCalledTimes(1);
-        expect(mockOnSearchChange).toHaveBeenCalledWith('grocery');
+        expect(handler).toHaveBeenCalledTimes(7);
+        expect(handler).toHaveBeenLastCalledWith('grocery');
     });
 
-    it('calls onSearchChange when user clears the input', () => {
-        render(
-            <Search
-                searchTerm="existing search"
-                onSearchChange={mockOnSearchChange}
-            />
-        );
+    it('calls onSearchChange when user clears the input', async () => {
+        const handler = renderControlled('existing search');
+        const input = screen.getByRole('textbox');
 
-        const searchInput = screen.getByTestId('search-input');
-        fireEvent.change(searchInput, { target: { value: '' } });
+        await act(async () => {
+            await userEvent.clear(input);
+        });
 
-        expect(mockOnSearchChange).toHaveBeenCalledTimes(1);
-        expect(mockOnSearchChange).toHaveBeenCalledWith('');
+        expect(handler).toHaveBeenLastCalledWith('');
     });
 
     it('has correct input type', () => {
-        render(
-            <Search
-                searchTerm=""
-                onSearchChange={mockOnSearchChange}
-            />
-        );
-
-        const searchInput = screen.getByTestId('search-input');
-        expect(searchInput).toHaveAttribute('type', 'text');
+        renderControlled();
+        const input = screen.getByRole('textbox');
+        expect(input).toHaveAttribute('type', 'text');
     });
 });
