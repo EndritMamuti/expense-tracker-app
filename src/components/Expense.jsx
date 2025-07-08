@@ -1,6 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import Search from './Search.tsx';
+import SortDropdown from './SortDropdown.tsx';
+import AverageAmount from './AverageAmount.tsx';
 import styles from '../styles/Expense.module.css';
 
 const ExpenseCard = ({ expense, onDelete, isAuthenticated, categories }) => {
@@ -8,10 +11,14 @@ const ExpenseCard = ({ expense, onDelete, isAuthenticated, categories }) => {
     const navigate = useNavigate();
 
     const formatMoney = (amount) => {
+        const numericAmount = typeof amount === 'string'
+            ? parseFloat(amount) || 0
+            : amount || 0;
+
         return new Intl.NumberFormat('en-US', {
             style: 'currency',
             currency: 'USD'
-        }).format(amount || 0);
+        }).format(numericAmount);
     };
 
     const getCategoryName = () => {
@@ -110,8 +117,8 @@ const ExpensesHomePage = () => {
     const [categoriesLoading, setCategoriesLoading] = useState(true);
     const [error, setError] = useState('');
 
-
-
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortOption, setSortOption] = useState('none');
 
     const loadCategories = async () => {
         try {
@@ -125,11 +132,11 @@ const ExpensesHomePage = () => {
                 setCategories(data || []);
             } else {
                 console.log('Categories API not available, using sample data');
-                setCategories(sampleCategories);
+                setCategories([]);
             }
         } catch (err) {
             console.log('Categories network error, using sample data');
-            setCategories(sampleCategories);
+            setCategories([]);
         } finally {
             setCategoriesLoading(false);
         }
@@ -165,6 +172,44 @@ const ExpensesHomePage = () => {
         loadExpenses();
     }, []);
 
+    const filteredAndSortedExpenses = useMemo(() => {
+        let filtered = expenses;
+        if (searchTerm.trim()) {
+            filtered = expenses.filter(expense =>
+                expense.title?.toLowerCase().includes(searchTerm.toLowerCase().trim())
+            );
+        }
+
+        if (sortOption === 'none') {
+            return filtered;
+        }
+
+        return [...filtered].sort((a, b) => {
+            const getNumericAmount = (expense) => {
+                const amountValue = expense.value || expense.amount || 0;
+                return typeof amountValue === 'string'
+                    ? parseFloat(amountValue) || 0
+                    : amountValue || 0;
+            };
+
+            const amountA = getNumericAmount(a);
+            const amountB = getNumericAmount(b);
+
+            switch (sortOption) {
+                case 'highest':
+                    return amountB - amountA;
+                case 'lowest':
+                    return amountA - amountB;
+                case 'latest':
+                    return (b.id || 0) - (a.id || 0);
+                case 'oldest':
+                    return (a.id || 0) - (b.id || 0);
+                default:
+                    return 0;
+            }
+        });
+    }, [expenses, searchTerm, sortOption]);
+
     const deleteExpense = async (id) => {
         try {
             const response = await fetch(`http://localhost:8080/api/expenses/${id}`, {
@@ -184,8 +229,12 @@ const ExpensesHomePage = () => {
     };
 
     const totalAmount = expenses.reduce((sum, exp) => {
-        const amount = parseFloat(exp.value || exp.amount || 0);
-        return sum + (isNaN(amount) ? 0 : amount);
+        const amountValue = exp.value || exp.amount || 0;
+        const numericAmount = typeof amountValue === 'string'
+            ? parseFloat(amountValue) || 0
+            : amountValue || 0;
+
+        return sum + numericAmount;
     }, 0);
 
     if (loading || categoriesLoading) {
@@ -233,11 +282,28 @@ const ExpensesHomePage = () => {
                 </div>
             )}
 
+            {/* New Search and Sort Controls */}
+            <div className={styles.controlsSection}>
+                <div className={styles.controlsContainer}>
+                    <Search
+                        searchTerm={searchTerm}
+                        onSearchChange={setSearchTerm}
+                    />
+                    <SortDropdown
+                        sortOption={sortOption}
+                        onSortChange={setSortOption}
+                    />
+                </div>
+                <AverageAmount expenses={filteredAndSortedExpenses} />
+            </div>
+
             <div className={styles.summarySection}>
                 <div className={styles.summaryCard}>
                     <div className={styles.summaryContent}>
-                        <h3 className={styles.summaryValue}>{expenses.length}</h3>
-                        <p className={styles.summaryLabel}>Total Expenses</p>
+                        <h3 className={styles.summaryValue}>{filteredAndSortedExpenses.length}</h3>
+                        <p className={styles.summaryLabel}>
+                            {searchTerm ? 'Filtered Expenses' : 'Total Expenses'}
+                        </p>
                     </div>
                 </div>
                 <div className={styles.summaryCard}>
@@ -272,16 +338,25 @@ const ExpensesHomePage = () => {
                 </div>
             )}
 
-            {expenses.length === 0 ? (
+            {filteredAndSortedExpenses.length === 0 ? (
                 <div className={styles.emptyState}>
-                    <h3>No expenses yet</h3>
+                    <h3>
+                        {searchTerm ? 'No expenses match your search' : 'No expenses yet'}
+                    </h3>
                     <p>
-                        {isAuthenticated
-                            ? "Add your first expense to get started!"
-                            : "Log in to view your expenses."
+                        {searchTerm
+                            ? `Try searching for something else or clear your search.`
+                            : isAuthenticated
+                                ? "Add your first expense to get started!"
+                                : "Log in to view your expenses."
                         }
                     </p>
-                    {isAuthenticated && (
+                    {searchTerm && (
+                        <button onClick={() => setSearchTerm('')} className={styles.clearSearchButton}>
+                            Clear Search
+                        </button>
+                    )}
+                    {!searchTerm && isAuthenticated && (
                         <button onClick={() => navigate('/create-expense')} className={styles.createButtonLarge}>
                             Add First Expense
                         </button>
@@ -290,14 +365,18 @@ const ExpensesHomePage = () => {
             ) : (
                 <div className={styles.expensesSection}>
                     <div className={styles.sectionHeader}>
-                        <h2>Recent Expenses</h2>
+                        <h2>
+                            {searchTerm ? 'Search Results' : 'Recent Expenses'}
+                        </h2>
                         <div className={styles.sectionMeta}>
-                            {expenses.length} expense{expenses.length !== 1 ? 's' : ''}
+                            {filteredAndSortedExpenses.length} expense{filteredAndSortedExpenses.length !== 1 ? 's' : ''}
+                            {searchTerm && <span className={styles.searchBadge}>Filtered</span>}
+                            {sortOption !== 'none' && <span className={styles.sortBadge}>Sorted</span>}
                             {isAuthenticated && <span className={styles.authBadge}>Logged In</span>}
                         </div>
                     </div>
                     <div className={styles.expensesList}>
-                        {expenses.map(expense => (
+                        {filteredAndSortedExpenses.map(expense => (
                             <ExpenseCard
                                 key={expense.id}
                                 expense={expense}

@@ -544,3 +544,73 @@
 }
 
 
+.controlsSection {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.controlsContainer {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.clearSearchButton {
+    padding: 0.5rem 1rem;
+    background-color: #6b7280;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s ease;
+}
+
+.clearSearchButton:hover {
+    background-color: #4b5563;
+}
+
+.searchBadge {
+    background-color: #3b82f6;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.sortBadge {
+    background-color: #10b981;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.authBadge {
+    background-color: #8b5cf6;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .controlsSection {
+        margin-bottom: 1.5rem;
+        padding: 1rem;
+    }
+
+    .controlsContainer {
+        flex-direction: column;
+        gap: 0.75rem;
+        align-items: stretch;
+    }
+}
